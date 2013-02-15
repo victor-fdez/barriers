@@ -8,7 +8,7 @@ SenseReversingBarrier::SenseReversingBarrier(int numThreads) : Barrier(numThread
 
 int SenseReversingBarrier::wait()
 {
-	int threadId = omp_get_thread_num();
+	///int threadId = omp_get_thread_num();
 	int localSense = !(this->sense);	
 	int localCount = 0; 
 	///fetch & decrement atomically

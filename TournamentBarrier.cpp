@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include <omp.h>
+#include <assert.h>
 #include "Barrier.h"
 #include "TournamentBarrier.h"
 
@@ -18,14 +19,19 @@ TournamentBarrier::TournamentBarrier(int numThreads) : Barrier(numThreads)
 	cout << "number of rounds " << numberRounds << "\n";
 	///cout << "number of thread " << this->numThreads << "\n";
 	for(i = 0; i < this->numThreads; i++)
-		this->sense[i].value = 0;
+	{
+		this->sense[i].value = 1;
+	}
 	///intialize all other roles
-	for(k = 1; k <= this->numberRounds; k++)
+	for(k = 0; k <= this->numberRounds; k++)
+	{
 		for(i = 0; i < this->numThreads; i++)
 		{
 			this->rounds[round(i, k)].role = UNUSED;
 			this->rounds[round(i, k)].flag = 0;
+			this->rounds[round(i, k)].opponent = NULL;
 		}
+	}
 	///setup WINNERS and LOSERS
 	for(k = 1; k <= this->numberRounds; k++)
 	{
@@ -60,22 +66,39 @@ int TournamentBarrier::wait()
 		{
 			case CHAMPION :
 				//wait while opponent sets my flag
+///				#pragma omp critical(tournamentMsg)
+///				{
+///					cout << "round " << round << ": thread " << vip << " is champion\n";
+///				}
 				while(this->rounds[round(vip, round)].flag != localSense);
 				*(this->rounds[round(vip, round)].opponent) = localSense;
 				#pragma omp flush
 				goto tournamentBarrierWakeup;
 			case WINNER :
+///				#pragma omp critical(tournamentMsg)
+///				{
+///					cout << "round " << round << ": thread " << vip << " is winner\n";
+///				}
 				while(this->rounds[round(vip, round)].flag != localSense);
 				break;
 			case LOSER :
-				*this->rounds[round(vip, round)].opponent = localSense;
+///				#pragma omp critical(tournamentMsg)
+///				{
+///					cout << "round " << round << ": thread " << vip << " loses\n";
+///				}
+				*(this->rounds[round(vip, round)].opponent) = localSense;
 				#pragma omp flush
-				while(this->rounds[round(vip, round)].flag != localSense)	
+				while(this->rounds[round(vip, round)].flag != localSense);
 				goto tournamentBarrierWakeup;
 			default :
+				assert(0);
 				///something is wrong
 				break;
 		}		
+///		#pragma omp critical(tournamentMsg)
+///		{
+///			cout << "round " << round << ": thread " << vip << " next round\n";
+///		}
 		round++;
 	}
 	///wake up of threads
@@ -86,14 +109,20 @@ tournamentBarrierWakeup:
 		switch(this->rounds[round(vip, round)].role)
 		{
 			case CHAMPION :
+				assert(0);
 				break;
 			case WINNER :
-				*this->rounds[round(vip, round)].opponent = localSense;
+				*(this->rounds[round(vip, round)].opponent) = localSense;
 				#pragma omp flush
 				break;
 			case LOSER :
+				assert(0);
 				break;
 			case DROPOUT :
+///				#pragma omp critical(tournamentMsg)
+///				{
+///					cout << "thread " << vip << " finished\n";
+///				}
 				goto tournamentBarrierFinish;
 			default :
 				break;
@@ -114,7 +143,7 @@ void TournamentBarrier::printRounds()
 	for(i = 0; i < this->numThreads; i++)
 	{
 		cout << i << " [";
-		for(j=0; j <= this->numberRounds; j++)
+		for(j = 0; j <= this->numberRounds; j++)
 		{
 			int role = this->rounds[round(i,j)].role;
 			int flag = this->rounds[round(i,j)].flag;
@@ -140,5 +169,6 @@ void TournamentBarrier::printRounds()
 }
 TournamentBarrier::~TournamentBarrier()
 {
-	delete this->rounds;
+	delete[] this->rounds;
+	delete[] this->sense;
 }

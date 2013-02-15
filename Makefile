@@ -12,7 +12,7 @@ OMPFILES=$(patsubst %.cpp, %.o, $(OMPCFILES))
 
 .PHONY: test
 test: $(OMPFILES) test.o
-	$(CC) -o $@ $^ $(OMPLIBS)	
+	$(CC) $(CPPFLAGS) -o $@ $^ $(LDLIBS)
 	
 .PHONY: all
 all: openmp openmpi
@@ -29,7 +29,7 @@ $(OMPBARRIERLIB): $(OMPFILES)
 	$(AR) $(OMPBARRIERLIB) $(OMPFILES)
 
 %.o: %.cpp
-	$(CC) -c -o $@ $^ $(OMPFLAGS)
+	$(CC) $(CPPFLAGS) -c -o $@ $^
 
 clean:
 	rm -rf $(OMPFILES) test.o test
