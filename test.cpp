@@ -7,6 +7,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+
 	///SenseReversingBarrier senseBarrier(4);
 	TournamentBarrier tournamentBarrier(4);	
 	///tournamentBarrier.printRounds();
