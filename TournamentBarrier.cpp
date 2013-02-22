@@ -16,7 +16,7 @@ TournamentBarrier::TournamentBarrier(int numThreads) : Barrier(numThreads)
 	this->numberRounds = (int)ceil((log((double)numThreads)/log((double)2.0)));
 	this->rounds = new round_t[numThreads*(this->numberRounds+1)];
 	this->sense = new sense_t[numThreads]; 
-	cout << "number of rounds " << numberRounds << "\n";
+	///cout << "number of rounds " << numberRounds << "\n";
 	///cout << "number of thread " << this->numThreads << "\n";
 	for(i = 0; i < this->numThreads; i++)
 	{
